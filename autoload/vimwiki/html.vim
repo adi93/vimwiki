@@ -415,7 +415,7 @@ function! s:linkify_image(src, descr, verbatim_str)
   let src_str = ' src="'.a:src.'"'
   let descr_str = (a:descr != '' ? ' alt="'.a:descr.'"' : '')
   let verbatim_str = (a:verbatim_str != '' ? ' '.a:verbatim_str : '')
-  return '<img'.src_str.descr_str.verbatim_str.' />'
+  return '<img'.src_str.descr_str.verbatim_str.' class="displayd"/>'
 endfunction
 
 
@@ -839,15 +839,21 @@ function! s:process_tag_pre(line, pre)
     let class = matchstr(a:line, '{{{\zs.*$')
     "FIXME class cannot contain arbitrary strings
     let class = substitute(class, '\s\+$', '', 'g')
+
+    call add(lines, "<pre>")
+    let w:codeBlock=0
+
     if class != ""
-      call add(lines, "<pre ".class.">")
-    else
-      call add(lines, "<pre>")
+      call add(lines, "<code ".class.">")
+      let w:codeBlock = 1
     endif
     let pre = [1, len(matchstr(a:line, '^\s*\ze{{{'))]
     let processed = 1
   elseif pre[0] && a:line =~# '^\s*}}}\s*$'
     let pre = [0, 0]
+    if w:codeBlock
+      call add(lines, "</code>")
+    endif
     call add(lines, "</pre>")
     let processed = 1
   elseif pre[0]
@@ -1239,9 +1245,9 @@ function! s:parse_line(line, state)
     if processed && state.deflist
       let state.deflist = s:close_tag_def_list(state.deflist, lines)
     endif
-    if processed && state.quote
-      let state.quote = s:close_tag_quote(state.quote, lines)
-    endif
+    " if processed && state.quote
+    "   let state.quote = s:close_tag_quote(state.quote, lines)
+    " endif
     if processed && state.para
       let state.para = s:close_tag_para(state.para, lines)
     endif
